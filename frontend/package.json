@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.3",
+    "@webcontainer/api": "^1.5.3",
     "axios": "^1.7.9",
+    "highlight.js": "^11.11.1",
     "markdown-to-jsx": "^7.7.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useContext, createRef} from "react";
+import React, { useState, useEffect, useContext, createRef, useRef} from "react";
 import { UserContext } from "../context/user.context.jsx";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "../config/axios.js";
 import Markdown from "markdown-to-jsx";
+import { getWebContainer } from '../config/webcontainer'
+import hljs from 'highlight.js';
 import {
   InitializeSocket,
   recieveMessage,
@@ -138,7 +140,18 @@ const Project = () => {
       return newSelectedUserId;
     });
   };
- 
+
+    function saveFileTree(ft) {
+        axios.put('/projects/update-file-tree', {
+            projectId: project._id,
+            fileTree: ft
+        }).then(res => {
+            console.log(res.data)
+        }).catch(err => {
+            console.log(err)
+        })
+    }
+  
   function scrollToBottom() {
     messageBox.current.scrollTop = messageBox.current.scrollHeight
 }
