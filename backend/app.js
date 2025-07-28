@@ -10,7 +10,12 @@ import aiRoutes from "./routes/ai.routes.js"
 const app = express();
 app.use(morgan('dev'));
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://ai-agent-inky-rho.vercel.app"
+  ],
+  credentials: true
+}));
 app.use(cookieParser());
 app.get('/', (req, res) => {
     res.send('Hello World');
