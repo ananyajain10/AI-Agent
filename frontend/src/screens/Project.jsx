@@ -3,7 +3,7 @@ import { UserContext } from "../context/user.context.jsx";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "../config/axios.js";
 import Markdown from "markdown-to-jsx";
-import { getWebContainer } from '../config/webcontainer'
+import { getWebContainer } from '../config/webcontainer.js'
 import hljs from 'highlight.js';
 import {
   InitializeSocket,
