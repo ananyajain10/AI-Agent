@@ -15,9 +15,13 @@ const Home = () => {
     function createProject(e) {
         e.preventDefault()
         console.log({ projectName })
-
+        const token = localStorage.getItem('token');
         axios.post('/projects/create', {
             name: projectName
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
         })
             .then((res) => {
                 console.log(res)
