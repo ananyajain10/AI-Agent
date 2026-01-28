@@ -1,19 +1,26 @@
-import React, { Children, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/user.context";
 
-const UserAuth = ({children}) => {
+const UserAuth = ({ children }) => {
   const { user, loading } = useContext(UserContext);
-  if (loading){
-    return null;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [loading, user, navigate]);
+
+  if (loading) {
+    return null; 
   }
 
-  if (!user){
-    return navigate("/login");
+  if (!user) {
+    return null; 
   }
- 
-  return <>
-   {children}
-  </>
+
+  return <>{children}</>;
 };
 
 export default UserAuth;
