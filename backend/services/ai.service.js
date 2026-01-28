@@ -103,8 +103,32 @@ const model = genAI.getGenerativeModel({
 });
 
 export const generateResult = async (prompt) => {
-
+  try {
     const result = await model.generateContent(prompt);
 
-    return result.response.text()
-}
+    const text = result?.response?.text();
+    if (!text) {
+      throw new Error("Empty AI response");
+    }
+
+    try {
+      const parsed = JSON.parse(text);
+      return {
+        success: true,
+        ...parsed,
+      };
+    } catch {
+      
+      return {
+        success: true,
+        text: text,
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      text: "AI failed to generate response",
+      error: error.message,
+    };
+  }
+};

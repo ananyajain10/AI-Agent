@@ -49,25 +49,37 @@ io.on("connection", (socket) => {
   socket.join(socket.roomId);
 
   socket.on("message", async (data) => {
-    console.log("message", data);
-    const message = data.message
-    const aiIsPresentInMessage = message.includes("@ai");
-    socket.broadcast.to(socket.roomId).emit("message", data );
-    if (aiIsPresentInMessage){
-        
-        const prompt = message.replace('@ai', '');
-        const result = await generateResult(prompt);
-        io.to(socket.roomId).emit('message', {
-            message : result,
-            sender:{
-                _id: 'ai',
-                email: 'AI'
-            }
-        })
-        return
-    }
-   
-  });
+  const message = data.message;
+
+  socket.broadcast.to(socket.roomId).emit("message", data);
+
+  if (!message.includes("@ai")) return;
+
+  const prompt = message.replace("@ai", "").trim();
+
+  try {
+    const result = await generateResult(prompt);
+
+    io.to(socket.roomId).emit("message", {
+      message: JSON.stringify(result), // ✅ ALWAYS STRINGIFIED JSON
+      sender: {
+        _id: "ai",
+        email: "AI",
+      },
+    });
+  } catch (err) {
+    io.to(socket.roomId).emit("message", {
+      message: JSON.stringify({
+        success: false,
+        text: "AI service failed",
+      }),
+      sender: {
+        _id: "ai",
+        email: "AI",
+      },
+    });
+  }
+});
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
