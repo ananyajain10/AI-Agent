@@ -20,7 +20,7 @@ const Login = () => {
         navigate("/");
       })
       .catch((error) => {
-        console.log(error);
+        alert("Login failed. Please check your credentials.");
       });
   }
   return (
