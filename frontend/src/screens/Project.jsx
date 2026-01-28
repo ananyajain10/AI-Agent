@@ -1,10 +1,16 @@
-import React, { useState, useEffect, useContext, createRef, useRef} from "react";
+import {
+  useState,
+  useEffect,
+  useContext,
+  createRef,
+  useRef,
+} from "react";
 import { UserContext } from "../context/user.context.jsx";
 import { useLocation } from "react-router-dom";
 import axios from "../config/axios.js";
 import Markdown from "markdown-to-jsx";
-import { getWebContainer } from '../config/webContainer.js'
-import hljs from 'highlight.js';
+import { getWebContainer } from "../config/webContainer.js";
+import hljs from "highlight.js";
 import {
   InitializeSocket,
   recieveMessage,
@@ -12,16 +18,16 @@ import {
 } from "../config/socket.js";
 
 function SyntaxHighlightedCode(props) {
-  const ref = useRef(null)
+  const ref = useRef(null);
 
   useEffect(() => {
-      if (ref.current && props.className?.includes('lang-') && window.hljs) {
-          window.hljs.highlightElement(ref.current)
-          ref.current.removeAttribute('data-highlighted')
-      }
-  }, [ props.className, props.children ])
+    if (ref.current && props.className?.includes("lang-") && window.hljs) {
+      window.hljs.highlightElement(ref.current);
+      ref.current.removeAttribute("data-highlighted");
+    }
+  }, [props.className, props.children]);
 
-  return <code {...props} ref={ref} />
+  return <code {...props} ref={ref} />;
 }
 
 const Project = () => {
@@ -31,16 +37,16 @@ const Project = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(new Set());
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const { user } = useContext(UserContext);
   const messageBox = createRef();
-  const [messages, setMessages] = useState([])
-  const [fileTree, setFileTree] = useState({})
-  const [ currentFile, setCurrentFile ] = useState(null)
-  const [ openFiles, setOpenFiles ] = useState([])
-  const [ webContainer, setWebContainer ] = useState(null)
-  const [ iframeUrl, setIframeUrl ] = useState(null)
-  const [ runProcess, setRunProcess ] = useState(null)
+  const [messages, setMessages] = useState([]);
+  const [fileTree, setFileTree] = useState({});
+  const [currentFile, setCurrentFile] = useState(null);
+  const [openFiles, setOpenFiles] = useState([]);
+  const [webContainer, setWebContainer] = useState(null);
+  const [iframeUrl, setIframeUrl] = useState(null);
+  const [runProcess, setRunProcess] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
   console.log(location.state);
@@ -49,21 +55,21 @@ const Project = () => {
     InitializeSocket(project._id);
 
     recieveMessage("message", (data) => {
-      if (data.sender._id == 'ai') {
-        const message = JSON.parse(data.message)
-        console.log(message)
-        webContainer?.mount(message.fileTree)
+      if (data.sender._id == "ai") {
+        const message = JSON.parse(data.message);
+        console.log(message);
+        webContainer?.mount(message.fileTree);
         if (message.fileTree) {
-            setFileTree(message.fileTree || {})
+          setFileTree(message.fileTree || {});
         }
-        setMessages(prevMessages => [ ...prevMessages, data ])
+        setMessages((prevMessages) => [...prevMessages, data]);
       } else {
-        setMessages(prevMessages => [ ...prevMessages, data ])
+        setMessages((prevMessages) => [...prevMessages, data]);
       }
     });
 
     // Initialize WebContainer
-    getWebContainer().then(container => {
+    getWebContainer().then((container) => {
       setWebContainer(container);
     });
 
@@ -72,7 +78,7 @@ const Project = () => {
       .then((res) => {
         console.log(res.data.project);
         setProject(res.data.project);
-        setFileTree(res.data.project.fileTree || {})
+        setFileTree(res.data.project.fileTree || {});
       });
 
     axios
@@ -96,23 +102,28 @@ const Project = () => {
         message,
         sender: user,
       });
-      setMessages(prevMessages => [...prevMessages, {sender: user, message}])
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { sender: user, message },
+      ]);
       setMessage("");
     }
-  }
+  };
 
-  function writeAiMessage(message){
-    const messageObject = JSON.parse(message)
+  function writeAiMessage(message) {
+    const messageObject = JSON.parse(message);
     return (
       <div className="overflow-auto bg-gradient-to-br from-slate-900 to-slate-800 text-emerald-400 rounded-lg p-3 shadow-lg border border-slate-700">
-          <Markdown children = {messageObject.text}
-          options = {{
-            overrides:{
+        <Markdown
+          children={messageObject.text}
+          options={{
+            overrides: {
               code: SyntaxHighlightedCode,
             },
-          }} />
+          }}
+        />
       </div>
-    )
+    );
   }
 
   function addCollaborators() {
@@ -149,52 +160,65 @@ const Project = () => {
   };
 
   function saveFileTree(ft) {
-      axios.put('/projects/update-file-tree', {
-          projectId: project._id,
-          fileTree: ft
-      }).then(res => {
-          console.log(res.data)
-      }).catch(err => {
-          console.log(err)
+    axios
+      .put("/projects/update-file-tree", {
+        projectId: project._id,
+        fileTree: ft,
       })
+      .then((res) => {
+        console.log(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   function scrollToBottom() {
     if (messageBox.current) {
-      messageBox.current.scrollTop = messageBox.current.scrollHeight
+      messageBox.current.scrollTop = messageBox.current.scrollHeight;
     }
   }
 
   const getFileIcon = (filename) => {
-    const ext = filename.split('.').pop().toLowerCase();
+    const ext = filename.split(".").pop().toLowerCase();
     switch (ext) {
-      case 'js':
-      case 'jsx': return 'ri-javascript-fill text-yellow-500';
-      case 'html': return 'ri-html5-fill text-orange-500';
-      case 'css': return 'ri-css3-fill text-blue-500';
-      case 'json': return 'ri-file-code-fill text-green-500';
-      case 'md': return 'ri-markdown-fill text-purple-500';
-      case 'py': return 'ri-file-code-fill text-blue-400';
-      case 'ts':
-      case 'tsx': return 'ri-file-code-fill text-blue-600';
-      default: return 'ri-file-fill text-gray-500';
+      case "js":
+      case "jsx":
+        return "ri-javascript-fill text-yellow-500";
+      case "html":
+        return "ri-html5-fill text-orange-500";
+      case "css":
+        return "ri-css3-fill text-blue-500";
+      case "json":
+        return "ri-file-code-fill text-green-500";
+      case "md":
+        return "ri-markdown-fill text-purple-500";
+      case "py":
+        return "ri-file-code-fill text-blue-400";
+      case "ts":
+      case "tsx":
+        return "ri-file-code-fill text-blue-600";
+      default:
+        return "ri-file-fill text-gray-500";
     }
   };
 
   const runProject = async () => {
     if (!webContainer) return;
-    
+
     setIsRunning(true);
     try {
       await webContainer.mount(fileTree);
-      
+
       const installProcess = await webContainer.spawn("npm", ["install"]);
-      
-      installProcess.output.pipeTo(new WritableStream({
-        write(chunk) {
-          console.log(chunk);
-        }
-      }));
+
+      installProcess.output.pipeTo(
+        new WritableStream({
+          write(chunk) {
+            console.log(chunk);
+          },
+        }),
+      );
 
       if (runProcess) {
         runProcess.kill();
@@ -202,27 +226,29 @@ const Project = () => {
 
       let tempRunProcess = await webContainer.spawn("npm", ["start"]);
 
-      tempRunProcess.output.pipeTo(new WritableStream({
-        write(chunk) {
-          console.log(chunk);
-        }
-      }));
+      tempRunProcess.output.pipeTo(
+        new WritableStream({
+          write(chunk) {
+            console.log(chunk);
+          },
+        }),
+      );
 
       setRunProcess(tempRunProcess);
 
-      webContainer.on('server-ready', (port, url) => {
+      webContainer.on("server-ready", (port, url) => {
         console.log(port, url);
         setIframeUrl(url);
         setIsRunning(false);
       });
     } catch (error) {
-      console.error('Error running project:', error);
+      console.error("Error running project:", error);
       setIsRunning(false);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send();
     }
@@ -235,15 +261,15 @@ const Project = () => {
         .message-animate {
           animation: slideInUp 0.3s ease-out;
         }
-        
+
         .fade-in {
           animation: fadeIn 0.2s ease-out;
         }
-        
+
         .scale-in {
           animation: scaleIn 0.2s ease-out;
         }
-        
+
         @keyframes slideInUp {
           from {
             opacity: 0;
@@ -254,12 +280,16 @@ const Project = () => {
             transform: translateY(0);
           }
         }
-        
+
         @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
-        
+
         @keyframes scaleIn {
           from {
             opacity: 0;
@@ -270,33 +300,33 @@ const Project = () => {
             transform: scale(1);
           }
         }
-        
+
         .scrollbar-custom {
           scrollbar-width: thin;
           scrollbar-color: rgb(148 163 184) transparent;
         }
-        
+
         .scrollbar-custom::-webkit-scrollbar {
           width: 6px;
         }
-        
+
         .scrollbar-custom::-webkit-scrollbar-track {
           background: transparent;
         }
-        
+
         .scrollbar-custom::-webkit-scrollbar-thumb {
           background-color: rgb(148 163 184);
           border-radius: 3px;
         }
-        
+
         .scrollbar-custom::-webkit-scrollbar-thumb:hover {
           background-color: rgb(100 116 139);
         }
-        
+
         .pulse-ring {
           animation: pulseRing 2s infinite;
         }
-        
+
         @keyframes pulseRing {
           0% {
             transform: scale(1);
@@ -319,7 +349,9 @@ const Project = () => {
               className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300 hover:scale-105 backdrop-blur-md shadow-lg border border-white/20"
             >
               <i className="ri-user-add-fill text-lg"></i>
-              <span className="hidden sm:inline font-medium">Add Collaborator</span>
+              <span className="hidden sm:inline font-medium">
+                Add Collaborator
+              </span>
             </button>
             <button
               className="p-3 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-110 backdrop-blur-md"
@@ -331,42 +363,47 @@ const Project = () => {
 
           {/* Chat Area */}
           <div className="convo-area flex-grow flex flex-col h-full relative overflow-hidden">
-            <div 
+            <div
               ref={messageBox}
               className="message-box p-4 flex-grow flex flex-col gap-3 overflow-auto scrollbar-custom"
             >
               {messages.map((msg, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={`message-animate ${
-                    msg.sender._id === 'ai' 
-                      ? 'max-w-xs lg:max-w-sm' 
-                      : 'max-w-xs'
+                    msg.sender._id === "ai"
+                      ? "max-w-xs lg:max-w-sm"
+                      : "max-w-xs"
                   } ${
-                    msg.sender._id == user._id.toString() && 'ml-auto'
+                    msg.sender._id == user._id && "ml-auto"
                   } message flex flex-col p-4 ${
-                    msg.sender._id === 'ai'
-                      ? 'bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 border-2 border-emerald-200/50 shadow-lg'
-                      : msg.sender._id == user._id.toString()
-                      ? 'bg-indigo-600 hover:bg-indigo-700text-white shadow-lg'
-                      : 'bg-gradient-to-br from-white to-slate-50 border-2 border-slate-200/50 shadow-md'
+                    msg.sender._id === "ai"
+                      ? "bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 border-2 border-emerald-200/50 shadow-lg"
+                      : msg.sender._id == user._id
+                        ? "bg-indigo-600 hover:bg-indigo-700text-white shadow-lg"
+                        : "bg-gradient-to-br from-white to-slate-50 border-2 border-slate-200/50 shadow-md"
                   } w-fit rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]`}
                 >
-                  <small className={`text-xs font-semibold mb-2 ${
-                    msg.sender._id == user._id.toString() ? 'text-white/90' : 'text-slate-600'
-                  }`}>
+                  <small
+                    className={`text-xs font-semibold mb-2 ${
+                      msg.sender._id == user._id
+                        ? "text-white/90"
+                        : "text-slate-600"
+                    }`}
+                  >
                     {msg.sender.email || msg.sender.name}
                   </small>
                   <div className="text-sm leading-relaxed">
-                    {msg.sender._id === 'ai' 
-                      ? writeAiMessage(msg.message)
-                      : <p className="whitespace-pre-wrap">{msg.message}</p>
-                    }
+                    {msg.sender._id === "ai" ? (
+                      writeAiMessage(msg.message)
+                    ) : (
+                      <p className="whitespace-pre-wrap">{msg.message}</p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-            
+
             {/* Message Input */}
             <div className="input-message flex w-full p-4 bg-gradient-to-r from-white/90 via-slate-50/90 to-indigo-50/90 backdrop-blur-md border-t border-indigo-200/50">
               <input
@@ -377,8 +414,8 @@ const Project = () => {
                 type="text"
                 placeholder="Type your message... (Enter to send)"
               />
-              <button 
-                onClick={send} 
+              <button
+                onClick={send}
                 disabled={!message.trim()}
                 className="px-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 disabled:from-slate-300 disabled:to-slate-400 text-white rounded-r-2xl transition-all duration-300 hover:scale-105 shadow-lg disabled:cursor-not-allowed disabled:hover:scale-100"
               >
@@ -406,7 +443,10 @@ const Project = () => {
             <div className="users-list p-4 space-y-3">
               {project.users &&
                 project.users.map((projectUser, index) => (
-                  <div key={index} className="user flex gap-3 items-center p-4 hover:bg-gradient-to-r hover:from-slate-100 hover:to-indigo-50 rounded-xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-md border border-transparent hover:border-indigo-200">
+                  <div
+                    key={index}
+                    className="user flex gap-3 items-center p-4 hover:bg-gradient-to-r hover:from-slate-100 hover:to-indigo-50 rounded-xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-md border border-transparent hover:border-indigo-200"
+                  >
                     <div className="relative">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg">
                         <i className="ri-user-fill text-lg"></i>
@@ -416,7 +456,9 @@ const Project = () => {
                       </div>
                     </div>
                     <div className="flex-grow">
-                      <h1 className="font-semibold text-slate-800">{projectUser.email}</h1>
+                      <h1 className="font-semibold text-slate-800">
+                        {projectUser.email}
+                      </h1>
                       <p className="text-xs text-slate-500 mt-1">Online</p>
                     </div>
                   </div>
@@ -442,11 +484,15 @@ const Project = () => {
                     setOpenFiles([...new Set([...openFiles, file])]);
                   }}
                   className={`tree-element cursor-pointer p-4 px-6 flex items-center gap-3 hover:bg-gradient-to-r hover:from-slate-200 hover:to-indigo-100 w-full text-left transition-all duration-300 border-b border-slate-200/50 hover:shadow-sm transform hover:scale-[1.01] ${
-                    currentFile === file ? 'bg-gradient-to-r from-indigo-100 to-purple-100 border-l-4 border-indigo-500' : ''
+                    currentFile === file
+                      ? "bg-gradient-to-r from-indigo-100 to-purple-100 border-l-4 border-indigo-500"
+                      : ""
                   }`}
                 >
                   <i className={`${getFileIcon(file)} text-lg`}></i>
-                  <p className="font-medium text-sm text-slate-700 truncate">{file}</p>
+                  <p className="font-medium text-sm text-slate-700 truncate">
+                    {file}
+                  </p>
                 </button>
               ))}
             </div>
@@ -462,17 +508,23 @@ const Project = () => {
                     key={index}
                     onClick={() => setCurrentFile(file)}
                     className={`open-file cursor-pointer p-4 px-6 flex items-center gap-3 transition-all duration-300 border-r border-slate-300 hover:bg-white/70 min-w-0 ${
-                      currentFile === file 
-                        ? 'bg-white text-indigo-600 shadow-md border-b-2 border-indigo-500' 
-                        : 'text-slate-600 hover:text-slate-800'
+                      currentFile === file
+                        ? "bg-white text-indigo-600 shadow-md border-b-2 border-indigo-500"
+                        : "text-slate-600 hover:text-slate-800"
                     }`}
                   >
-                    <i className={`${getFileIcon(file)} text-sm flex-shrink-0`}></i>
-                    <p className="font-medium text-sm whitespace-nowrap truncate max-w-32">{file}</p>
-                    <button 
+                    <i
+                      className={`${getFileIcon(file)} text-sm flex-shrink-0`}
+                    ></i>
+                    <p className="font-medium text-sm whitespace-nowrap truncate max-w-32">
+                      {file}
+                    </p>
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const newOpenFiles = openFiles.filter(f => f !== file);
+                        const newOpenFiles = openFiles.filter(
+                          (f) => f !== file,
+                        );
                         setOpenFiles(newOpenFiles);
                         if (currentFile === file && newOpenFiles.length > 0) {
                           setCurrentFile(newOpenFiles[0]);
@@ -527,20 +579,23 @@ const Project = () => {
                           ...fileTree,
                           [currentFile]: {
                             file: {
-                              contents: updatedContent
-                            }
-                          }
-                        }
+                              contents: updatedContent,
+                            },
+                          },
+                        };
                         setFileTree(ft);
                         saveFileTree(ft);
                       }}
-                      dangerouslySetInnerHTML={{ 
-                        __html: hljs.highlight('javascript', fileTree[currentFile].file.contents).value 
+                      dangerouslySetInnerHTML={{
+                        __html: hljs.highlight(
+                          "javascript",
+                          fileTree[currentFile].file.contents,
+                        ).value,
                       }}
                       style={{
-                        whiteSpace: 'pre-wrap',
-                        paddingBottom: '25rem',
-                        lineHeight: '1.6',
+                        whiteSpace: "pre-wrap",
+                        paddingBottom: "25rem",
+                        lineHeight: "1.6",
                       }}
                     />
                   </pre>
@@ -549,8 +604,12 @@ const Project = () => {
                 <div className="flex-grow bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
                   <div className="text-center text-slate-500 p-8">
                     <i className="ri-file-code-line text-6xl mb-4 text-slate-400"></i>
-                    <h3 className="text-lg font-semibold mb-2">No File Selected</h3>
-                    <p className="text-sm">Choose a file from the explorer to start editing</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No File Selected
+                    </h3>
+                    <p className="text-sm">
+                      Choose a file from the explorer to start editing
+                    </p>
                   </div>
                 </div>
               )}
@@ -563,16 +622,18 @@ const Project = () => {
               <div className="address-bar bg-gradient-to-r from-slate-100 via-slate-150 to-slate-200 p-3 border-b border-slate-300 shadow-sm">
                 <div className="flex items-center gap-3">
                   <i className="ri-global-line text-slate-500 text-lg"></i>
-                  <input 
+                  <input
                     type="text"
                     onChange={(e) => setIframeUrl(e.target.value)}
-                    value={iframeUrl} 
-                    className="flex-grow p-3 px-4 bg-white border-2 border-slate-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 rounded-xl text-sm outline-none transition-all duration-300 focus:shadow-md" 
+                    value={iframeUrl}
+                    className="flex-grow p-3 px-4 bg-white border-2 border-slate-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 rounded-xl text-sm outline-none transition-all duration-300 focus:shadow-md"
                     placeholder="Enter URL..."
                   />
-                  <button 
+                  <button
                     onClick={() => {
-                      const iframe = document.querySelector('.preview-panel iframe');
+                      const iframe = document.querySelector(
+                        ".preview-panel iframe",
+                      );
                       if (iframe) iframe.src = iframe.src;
                     }}
                     className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-md"
@@ -581,8 +642,8 @@ const Project = () => {
                   </button>
                 </div>
               </div>
-              <iframe 
-                src={iframeUrl} 
+              <iframe
+                src={iframeUrl}
                 className="w-full h-full bg-white"
                 title="Project Preview"
               />
@@ -598,23 +659,24 @@ const Project = () => {
                 <h2 className="text-2xl font-bold text-slate-800 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Add Collaborators
                 </h2>
-                <button 
+                <button
                   onClick={() => {
                     setIsModalOpen(false);
                     setSelectedUserId(new Set());
-                  }} 
+                  }}
                   className="p-3 hover:bg-slate-100 rounded-xl transition-all duration-200 text-slate-500 hover:text-slate-700"
                 >
                   <i className="ri-close-fill text-xl"></i>
                 </button>
               </header>
-              
+
               <div className="users-list flex flex-col gap-3 mb-8 max-h-80 overflow-auto scrollbar-custom">
                 {users.map((availableUser) => (
                   <div
                     key={availableUser._id}
                     className={`user cursor-pointer hover:bg-slate-50 rounded-2xl transition-all duration-300 p-4 flex gap-4 items-center transform hover:scale-[1.02] border-2 ${
-                      Array.from(selectedUserId).indexOf(availableUser._id) !== -1
+                      Array.from(selectedUserId).indexOf(availableUser._id) !==
+                      -1
                         ? "bg-gradient-to-r from-indigo-100 via-purple-50 to-pink-100 border-indigo-300 shadow-md"
                         : "border-transparent hover:border-slate-200 hover:shadow-sm"
                     }`}
@@ -624,22 +686,26 @@ const Project = () => {
                       <i className="ri-user-fill text-lg"></i>
                     </div>
                     <div className="flex-grow min-w-0">
-                      <h1 className="font-semibold text-slate-800 truncate">{availableUser.email}</h1>
+                      <h1 className="font-semibold text-slate-800 truncate">
+                        {availableUser.email}
+                      </h1>
                       <p className="text-sm text-slate-500">Click to select</p>
                     </div>
-                    {Array.from(selectedUserId).indexOf(availableUser._id) !== -1 && (
+                    {Array.from(selectedUserId).indexOf(availableUser._id) !==
+                      -1 && (
                       <i className="ri-check-line text-indigo-600 text-xl flex-shrink-0"></i>
                     )}
                   </div>
                 ))}
               </div>
-              
+
               <button
                 onClick={addCollaborators}
                 disabled={selectedUserId.size === 0}
                 className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 disabled:from-slate-300 disabled:to-slate-400 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-[1.02] disabled:cursor-not-allowed shadow-lg disabled:hover:scale-100"
               >
-                Add {selectedUserId.size} Collaborator{selectedUserId.size !== 1 ? 's' : ''}
+                Add {selectedUserId.size} Collaborator
+                {selectedUserId.size !== 1 ? "s" : ""}
               </button>
             </div>
           </div>
