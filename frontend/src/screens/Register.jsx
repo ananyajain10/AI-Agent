@@ -27,7 +27,14 @@ const Register = () => {
         navigate("/");
       })
       .catch((error) => {
-        console.log(error.response.data);
+         const message =
+    error?.response?.data?.message ||
+    error?.message ||
+    "Registration failed";
+
+    
+        alert(message);
+        console.error("Registration error:", error);
       });
   }
   return (

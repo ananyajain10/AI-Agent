@@ -7,18 +7,34 @@ export const createUserController = async (req, res) => {
   console.log(req.body);
 
   if (!error.isEmpty()) {
-    return res.status(400).json({ error: error.array() });
-  }
+  return res.status(400).json({
+    message: "Validation failed",
+    errors: error.array(),
+  });
+}
+
 
   try {
+    const userExists = await userModel.findOne({ email: req.body.email });
+
+    if (userExists) {
+  return res.status(409).json({
+    message: "User already exists",
+  });
+}
+
+
     const user = await userService.createUser(req.body);
     console.log(user);
     const token = await user.generateJWT();
 
     res.status(201).json({ user, token });
   } catch (e) {
-    res.status(400).send(e.message);
-  }
+  res.status(400).json({
+    message: e.message || "Registration failed",
+  });
+}
+
 };
 
 export const loginUserController = async (req, res) => {

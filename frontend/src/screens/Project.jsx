@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, createRef, useRef} from "react";
 import { UserContext } from "../context/user.context.jsx";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import axios from "../config/axios.js";
 import Markdown from "markdown-to-jsx";
 import { getWebContainer } from '../config/webcontainer'
@@ -348,7 +348,7 @@ const Project = () => {
                     msg.sender._id === 'ai'
                       ? 'bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 border-2 border-emerald-200/50 shadow-lg'
                       : msg.sender._id == user._id.toString()
-                      ? 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg'
+                      ? 'bg-indigo-600 hover:bg-indigo-700text-white shadow-lg'
                       : 'bg-gradient-to-br from-white to-slate-50 border-2 border-slate-200/50 shadow-md'
                   } w-fit rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]`}
                 >

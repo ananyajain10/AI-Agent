@@ -1,30 +1,16 @@
 import React, { Children, useContext, useEffect, useState } from "react";
 import { UserContext } from "../context/user.context";
-import { useNavigate } from "react-router-dom";
+
 const UserAuth = ({children}) => {
-  const [loading, setLoading] = useState(true);
-  const { user } = useContext(UserContext);
-  const token = localStorage.getItem("token");
-  const navigate = useNavigate();
+  const { user, loading } = useContext(UserContext);
+  if (loading){
+    return null;
+  }
+
+  if (!user){
+    return navigate("/login");
+  }
  
-
-  
-
-  useEffect(() => {
-    if (user) {
-        setLoading(false);
-      }
-    if (!token) {
-      navigate("/login");
-    }
-    if (!user) {
-      navigate("/login");
-    }
-  }, []);
-
-    if (loading) {
-        return <div>Loading...</div>;
-      }
   return <>
    {children}
   </>

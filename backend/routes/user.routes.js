@@ -26,5 +26,8 @@ router.get("/all", authMiddleware.authUser, userController.getAllUserController)
 router.get("/profile", authMiddleware.authUser, userController.profleContoller);
 
 router.get("/logout", authMiddleware.authUser, userController.logoutController);
+router.get("/me", authMiddleware.authUser, (req, res) => {
+  res.json({ user: req.user });
+});
 
 export default router;

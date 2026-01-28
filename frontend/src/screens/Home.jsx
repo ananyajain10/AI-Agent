@@ -1,106 +1,152 @@
-import React, { useContext, useState, useEffect } from 'react'
-import { UserContext } from '../context/user.context'
-import axios from "../config/axios"
-import { useNavigate } from 'react-router-dom'
+import React, { useContext, useState, useEffect } from "react";
+import { UserContext } from "../context/user.context";
+import axios from "../config/axios";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const { user, setUser } = useContext(UserContext);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [project, setProject] = useState([]);
 
-    const { user } = useContext(UserContext)
-    const [ isModalOpen, setIsModalOpen ] = useState(false)
-    const [ projectName, setProjectName ] = useState(null)
-    const [ project, setProject ] = useState([])
+  const navigate = useNavigate();
 
-    const navigate = useNavigate()
-
-    function createProject(e) {
-        e.preventDefault()
-        console.log({ projectName })
-        const token = localStorage.getItem('token');
-        axios.post('/projects/create', {
-            name: projectName
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
-            .then((res) => {
-                console.log(res)
-                setIsModalOpen(false)
-            })
-            .catch((error) => {
-                console.log(error)
-            })
+  const logout = async () => {
+    try {
+      await axios.post("/users/logout");
+    } catch (err) {
+      console.log("Logout request failed (safe to ignore)");
+    } finally {
+      localStorage.removeItem("token");
+      setUser(null);
+      navigate("/login");
     }
+  };
 
-    useEffect(() => {
-        axios.get('/projects/all').then((res) => {
-            setProject(res.data.projects)
+  function createProject(e) {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
 
-        }).catch(err => {
-            console.log(err)
-        })
+    axios
+      .post(
+        "/projects/create",
+        { name: projectName },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then(() => {
+        setIsModalOpen(false);
+        setProjectName("");
+      })
+      .catch(console.log);
+  }
 
-    }, [isModalOpen])
+  useEffect(() => {
+    axios
+      .get("/projects/all")
+      .then((res) => setProject(res.data.projects))
+      .catch(console.log);
+  }, [isModalOpen]);
 
-    return (
-        <main className='p-4'>
-            <div className="projects flex flex-wrap gap-3">
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      {/* Header */}
+      <header className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">
+            Welcome, <span className="text-blue-600">{user?.email}</span>
+          </h1>
+          <p className="text-sm text-slate-500">
+            Manage and collaborate on your projects
+          </p>
+        </div>
+
+        <button
+          onClick={logout}
+          className="px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition"
+        >
+          Logout
+        </button>
+      </header>
+
+      {/* Actions */}
+      <div className="mb-6">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+        >
+          + New Project
+        </button>
+      </div>
+
+      {/* Projects Grid */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {project.map((project) => (
+          <div
+            key={project._id}
+            onClick={() =>
+              navigate(`/project`, {
+                state: { project },
+              })
+            }
+            className="cursor-pointer rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all"
+          >
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">
+              {project.name}
+            </h2>
+
+            <div className="text-sm text-slate-500 flex items-center gap-2">
+              <i className="ri-user-line text-base"></i>
+              <span>{project.users.length} collaborators</span>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-slate-800 mb-4">
+              Create New Project
+            </h2>
+
+            <form onSubmit={createProject} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">
+                  Project Name
+                </label>
+                <input
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  type="text"
+                  placeholder="e.g. AI Dashboard"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
                 <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="project p-4 border border-slate-300 rounded-md">
-                    New Project
-                    <i className="ri-link ml-2"></i>
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 transition"
+                >
+                  Cancel
                 </button>
 
-                {
-                    project.map((project) => (
-                        <div key={project._id}
-                            onClick={() => {
-                                navigate(`/project`, {
-                                    state: { project }
-                                })
-                            }}
-                            className="project flex flex-col gap-2 cursor-pointer p-4 border border-slate-300 rounded-md min-w-52 hover:bg-slate-200">
-                            <h2
-                                className='font-semibold'
-                            >{project.name}</h2>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+};
 
-                            <div className="flex gap-2">
-                                <p> <small> <i className="ri-user-line"></i> Collaborators</small> :</p>
-                                {project.users.length}
-                            </div>
-
-                        </div>
-                    ))
-                }
-
-
-            </div>
-
-            {isModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-md shadow-md w-1/3">
-                        <h2 className="text-xl mb-4">Create New Project</h2>
-                        <form onSubmit={createProject}>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">Project Name</label>
-                                <input
-                                    onChange={(e) => setProjectName(e.target.value)}
-                                    value={projectName}
-                                    type="text" className="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
-                            </div>
-                            <div className="flex justify-end">
-                                <button type="button" className="mr-2 px-4 py-2 bg-gray-300 rounded-md" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">Create</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-
-        </main>
-    )
-}
-
-export default Home
+export default Home;
